@@ -19,12 +19,26 @@ A simple usage example with http_server package:
         print('listening on localhost, port 4040');
       });
     
-      httpDispatcher.get('/', (HttpRequest request, Map params) {
+      dartspatcher.get('/', (HttpRequest request, Map params) {
+        ...
+        request.response.close();
+      });
+      
+      dartspatcher.get('/:uriParam?queryParam=example', (HttpRequest request, Map params) {
         ...
         request.response.close();
       });
       
       ...
+    }
+    
+#### Params map
+
+    {
+      "uri": {},
+      "query": {},
+      "body": {},
+      "text": ""
     }
 
 ## Features and bugs
