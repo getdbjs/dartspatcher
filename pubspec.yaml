@@ -1,6 +1,6 @@
 name: dartspatcher
-description: A simple dispatcher for Dart server.
-version: 0.1.1
+description: A simple http dispatcher for Dart server.
+version: 0.2.0
 homepage: https://github.com/getdbjs/dartspatcher
 author: Davide Bausach <info@getdbjs.com>
 

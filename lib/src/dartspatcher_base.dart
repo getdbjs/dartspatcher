@@ -15,7 +15,9 @@ class Dartspatcher {
   };
   HttpRequest request;
   var body;
-  Map headers = {};
+  Map headers = {
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  };
 
   void _onSetHeaders(HttpResponse response) {
     headers.forEach((k, v){

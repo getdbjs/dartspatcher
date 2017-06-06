@@ -1,10 +1,10 @@
 # dartspatcher
 
-A simple dispatcher for Dart server.
+A simple http dispatcher for Dart server.
 
 ## Usage
 
-A simple usage example with http_server package:
+Usage example with http_server package:
 
     import 'package:http_server/http_server.dart';
     import 'package:dartspatcher/dartspatcher.dart';
@@ -17,6 +17,13 @@ A simple usage example with http_server package:
           dartspatcher.on(body);
         });
         print('listening on localhost, port 4040');
+      });
+      
+      dartspatcher.setHeaders({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+        'Content-Type': 'text/plain; charset=utf-8'
       });
     
       dartspatcher.get('/', (HttpRequest request, Map params) {
@@ -32,7 +39,20 @@ A simple usage example with http_server package:
       ...
     }
     
-#### Params map
+#### Set Headers
+
+    ...
+    
+    dartspatcher.setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      'Content-Type': 'text/plain; charset=utf-8'
+    });
+    
+    ...
+    
+#### Params Map
 
     {
       "uri": {},
