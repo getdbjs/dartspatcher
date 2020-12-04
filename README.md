@@ -1,66 +1,81 @@
-# dartspatcher
+# Dispatcher for HTTP server
 
-A simple http dispatcher for Dart server.
+A simple dispatcher for HTTP server like expressjs using `http_server` package.
+The following content types are recognized:
 
-## Usage
+- text/*
+- application/json
+- application/x-www-form-urlencoded
+- multipart/form-data
 
-Usage example with http_server package:
+**NOTE:** This package works for server-side Dart applications.
+In other words, if the app imports `dart:io`, it can use this
+package.
 
-    import 'package:http_server/http_server.dart';
-    import 'package:dartspatcher/dartspatcher.dart';
+The following content types are recognized:
 
-    main() {
-      Dartspatcher dartspatcher = new Dartspatcher();
-      
-      HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, 4040).then((server) {
-        server.transform(new HttpBodyHandler()).listen((HttpRequestBody body) {
-          dartspatcher.on(body);
-        });
-        print('listening on localhost, port 4040');
-      });
-      
-      dartspatcher.setHeaders({
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        'Content-Type': 'text/plain; charset=utf-8'
-      });
-    
-      dartspatcher.get('/', (HttpRequest request, Map params) {
-        ...
-        request.response.close();
-      });
-      
-      dartspatcher.get('/:uriParam?queryParam=example', (HttpRequest request, Map params) {
-        ...
-        request.response.close();
-      });
-      
-      ...
-    }
-    
+## Example usage
+
+```
+import 'dart:io';
+import 'package:dartspatcher/dartspatcher.dart';
+
+Future main() async {
+  Dartspatcher dartspatcher = Dartspatcher();
+
+  dartspatcher.setHeaders({
+    'Charset': 'utf-8',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    'Content-Type': 'text/plain; charset=utf-8'
+  });
+
+  dartspatcher.locals['var'] = 'value';
+
+  dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+    ...
+    request.response.close();
+  }, {'var': 'value'});
+
+  dartspatcher.get('/path/:param?var=value', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+    ...
+    request.response.close();
+  });
+
+  dartspatcher.post('/path', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+    ...
+    request.response.close();
+  });
+
+  dartspatcher.listen(InternetAddress.loopbackIPv4, 4040, (HttpServer server) {
+    print('Listening on localhost:${server.port}');
+  });
+}
+```
+
 #### Set Headers
+```
+...
 
-    ...
-    
-    dartspatcher.setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-      'Content-Type': 'text/plain; charset=utf-8'
-    });
-    
-    ...
-    
-#### Params Map
+dartspatcher.setHeaders({
+  'Charset': 'utf-8',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+  'Content-Type': 'text/plain; charset=utf-8'
+});
 
-    {
-      "uri": {},
-      "query": {},
-      "body": {},
-      "text": ""
-    }
-
+...
+```
+#### Params Map<String, dynamic>
+```
+{
+  "uri": {},
+  "query": {},
+  "body": {}
+}
+```
 ## Features and bugs
 
 Please file feature requests and bugs at the [issue tracker][tracker].

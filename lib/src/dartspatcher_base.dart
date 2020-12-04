@@ -1,245 +1,142 @@
-// Copyright (c) 2017, Davide Bausach. All rights reserved. Use of this source
-// code is governed by a BSD-style license that can be found in the LICENSE file.
-
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-/// Checks if you are awesome. Spoiler: you are.
+import 'package:http_server/http_server.dart';
+
+import 'listener.dart';
+
 class Dartspatcher {
-  Map listeners = {
-    'GET': [],
-    'POST': [],
-    'PUT': [],
-    'DELETE': []
-  };
+  static final Dartspatcher _dartspatcher = Dartspatcher._internal();
+  Map<String, List<Listener>> listeners = {'GET': [], 'DELETE': [], 'PATCH': [], 'POST': [], 'PUT': []};
+  HttpServer server;
   HttpRequest request;
-  var body;
-  Map headers = {
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  };
+  dynamic body;
+  Map<String, String> headers = {};
+  Map<dynamic, dynamic> locals = {};
 
-  void _onSetHeaders(HttpResponse response) {
-    headers.forEach((k, v){
-      response.headers.add(k, v);
+  factory Dartspatcher() {
+    return _dartspatcher;
+  }
+
+  Dartspatcher._internal();
+
+  void _setHeaders(HttpResponse response) {
+    headers.forEach((key, value) {
+      response.headers.add(key, value);
     });
   }
 
-  void _setListeners(String method, String uri, Object callback) {
-    String regExp = uri.replaceAll(new RegExp(r':[a-zA-Z0-9]+'), '[a-zA-Z0-9]+');
-    listeners[method].add({
-      'uri': uri,
-      'callback': callback,
-      'regExp': new RegExp(r'' + regExp + '')
-    });
+  void _setListeners(String method, String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9]+'), '[a-zA-Z0-9]+');
+    listeners[method].add(Listener(path, callback, RegExp(r'' + regExp + ''), locals));
   }
 
-  Map _parseRoute() {
-    String uriQ = request.uri.toString();
-    List uq = uriQ.split('?');
-    String uri = uq[0];
-    Map result = {
-      'resultMap': {},
-      'params': {
-        'uri': {},
-        'query': request.uri.queryParameters,
-        'body': {},
-        'text': ''
-      }
-    };
-
-    for (final Map i in listeners[request.method]) {
-      if (i.containsValue(uri)) {
-        result['resultMap'] = i;
+  Map<String, dynamic> _parseRoute() {
+    String path = request.uri.path;
+    Map<String, dynamic> params = {'uri': {}, 'query': request.uri.queryParameters, 'body': null};
+    Map<String, dynamic> result = {'listener': null, 'params': params};
+    for (final Listener listener in listeners[request.method]) {
+      if (listener.path == path) {
+        result['listener'] = listener;
         break;
       }
     }
-
-    if (result['resultMap'].isEmpty) {
-      for (final Map i in listeners[request.method]) {
-        var match = i['regExp'].stringMatch(uri);
-        if (match == uri) {
-          List<String> requestUriList = uri.split('/')
-            ..removeAt(0);
-
-          List<String> matchUriList = i['uri'].split('/')
-            ..removeAt(0);
-
+    if (result['listener'] is! Listener) {
+      for (final Listener listener in listeners[request.method]) {
+        var match = listener.regExp.stringMatch(path);
+        if (match == path) {
+          List<String> requestUriList = path.split('/')..removeAt(0);
+          List<String> matchUriList = listener.path.split('/')..removeAt(0);
           for (int x = 0; x < requestUriList.length; x++) {
             if (matchUriList[x].startsWith(':')) {
               result['params']['uri'][matchUriList[x].replaceAll(':', '')] = requestUriList[x];
             }
           }
-
-          result['resultMap'] = i;
+          result['listener'] = listener;
           break;
         }
-
       }
     }
-
     return result;
   }
 
-  void _onGet() {
-    Map result = _parseRoute();
-    if (result['resultMap'].isNotEmpty) {
-      _ok();
-      result['resultMap']['callback'](request, result['params']);
-    } else {
-      _notFound();
-    }
-  }
-
-  Future _onPostPutDelete() async {
-    Map result = _parseRoute();
-    String chunks;
-    ContentType contentType = request.headers.contentType;
-
-    if (contentType != null && contentType.mimeType == 'application/json') {
-      try {
-        if (body != null) {
-          result['params']['body'] = body.body;
-        } else {
-          chunks = await request.transform(UTF8.decoder).join();
-          result['params']['body'] = JSON.decode(chunks);
-        }
-      } catch (e, s) {
-        _internalServerError(e, s);
-      }
-    } else if(contentType.mimeType == 'application/x-www-form-urlencoded') {
-      try {
-        if (body != null) {
-          result['params']['body'] = body.body;
-        } else {
-          chunks = await request.transform(UTF8.decoder).join();
-          Map k__v = {};
-          List<String> kv = chunks.split('&');
-          for (int i = 0; i<kv.length; i++) {
-            List<String> k_v = kv[i].split('=');
-            k__v[k_v[0]] = k_v[1];
-          }
-          result['params']['body'] = k__v;
-        }
-      } catch (e, s) {
-        _internalServerError(e, s);
-      }
-    } else if(contentType.mimeType == 'multipart/form-data') {
-      try {
-        if (body != null) {
-          result['params']['body'] = body.body;
-        } else {
-          //var formData = await request.transform(UTF8.decoder).join();
-          //print(formData);
-        }
-      } catch (e, s) {
-        _internalServerError(e, s);
-      }
-    } else if(contentType.mimeType.contains('text/')) {
-      try {
-        if (body != null) {
-          result['params']['text'] = body.body;
-        } else {
-          chunks = await request.transform(UTF8.decoder).join();
-          result['params']['text'] = chunks;
-        }
-      } catch (e, s) {
-        _internalServerError(e, s);
-      }
-    }
-
-    if (result['resultMap'].isNotEmpty) {
-      _ok();
-      result['resultMap']['callback'](request, result['params']);
-    } else {
-      _notFound();
-    }
-  }
-
   void _ok() {
-    request.response.statusCode = HttpStatus.OK;
+    request.response.statusCode = HttpStatus.ok;
   }
 
   void _notFound() {
-    request.response.statusCode = HttpStatus.NOT_FOUND;
-    request.response.close();
+    request.response
+      ..statusCode = HttpStatus.notFound
+      ..close();
   }
 
   void _internalServerError(e, s) {
     request.response
-      ..statusCode = HttpStatus.INTERNAL_SERVER_ERROR
-      ..write("Exception during file I/O: $e.")
-      ..write("StackTrace during file I/O: $s.")
+      ..statusCode = HttpStatus.internalServerError
+      ..write("Exception in handleRequest: $e.")
+      ..write("StackTrace in handleRequest: $s.")
       ..close();
   }
 
   void _methodNotAllowed() {
     request.response
-      ..statusCode = HttpStatus.METHOD_NOT_ALLOWED
+      ..statusCode = HttpStatus.methodNotAllowed
       ..write("Unsupported request: ${request.method}.")
       ..close();
   }
 
-  void setHeaders(Map headers) {
+  void setHeaders(Map<String, String> headers) {
     this.headers = headers;
   }
 
-  void get(String uri, Object callback) {
-    _setListeners('GET', uri, callback);
+  void get(String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    _setListeners('GET', path, callback, locals);
   }
 
-  void post(String uri, Object callback) {
-    _setListeners('POST', uri, callback);
+  void delete(String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    _setListeners('DELETE', path, callback);
   }
 
-  void put(String uri, Object callback) {
-    _setListeners('PUT', uri, callback);
+  void patch(String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    _setListeners('PATCH', path, callback);
   }
 
-  void delete(String uri, Object callback) {
-    _setListeners('DELETE', uri, callback);
+  void post(String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    _setListeners('POST', path, callback);
   }
 
-  void on(rb) {
-    if(rb is! HttpRequest) {
-      body = rb;
-      request = rb.request;
-    } else {
-      request = rb;
-    }
-    _onSetHeaders(request.response);
+  void put(String path, Function callback, [Map<dynamic, dynamic> locals]) {
+    _setListeners('PUT', path, callback);
+  }
 
-    if (!request.response.headers['access-control-allow-methods'].toString().contains(request.method)) {
-      _methodNotAllowed();
-      return;
-    }
-
+  void _on() {
     try {
-      switch (request.method) {
-        case 'GET':
-          _onGet();
-          break;
-        case 'POST':
-          _onPostPutDelete();
-          break;
-        case 'PUT':
-          _onPostPutDelete();
-          break;
-        case 'DELETE':
-          _onPostPutDelete();
-          break;
-        default:
-          _onGet();
-          break;
+      _setHeaders(request.response);
+      if (!request.response.headers['access-control-allow-methods'].toString().contains(request.method)) {
+        _methodNotAllowed();
+        return;
+      }
+      Map<String, dynamic> result = _parseRoute();
+      result['params']['body'] = body;
+      if (result['listener'] is Listener) {
+        _ok();
+        result['listener'].callback(request, result['params'], result['listener'].locals);
+      } else {
+        _notFound();
       }
     } catch (e, s) {
       print('Exception in handleRequest: $e');
       print('StackTrace in handleRequest: $s');
-      request.response
-        ..write('Exception in handleRequest: $e')
-        ..write('\n\n')
-        ..write('StackTrace in handleRequest: $s')
-        ..close();
+      _internalServerError(e, s);
     }
+  }
+
+  void listen(InternetAddress internetAddress, int port, [Function callback]) async {
+    server = await HttpServer.bind(internetAddress, port);
+    callback(server);
+    server.transform(HttpBodyHandler()).listen((HttpRequestBody body) {
+      this.body = body.body;
+      request = body.request;
+      _on();
+    });
   }
 }

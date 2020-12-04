@@ -1,8 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Dartspatcher instance is a singleton
+- Adding `http_server` package dependency to parse body
+- Adding feature for setting global and single listener loclas variables
+
 ## 0.2.0
 
-- Set Headers update
+- Adding Set Headers feature
 
 ## 0.1.1
 
