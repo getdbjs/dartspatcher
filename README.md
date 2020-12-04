@@ -8,6 +8,8 @@ The following content types are recognized:
 - application/x-www-form-urlencoded
 - multipart/form-data
 
+View documentation in example file
+
 **NOTE:** This package works for server-side Dart applications.
 In other words, if the app imports `dart:io`, it can use this
 package.
