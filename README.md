@@ -35,6 +35,8 @@ Future main() async {
 
   dartspatcher.locals['var'] = 'value';
 
+  dartspatcher.setVirtualDirectory('web');
+
   dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
     ...
     request.response.close();

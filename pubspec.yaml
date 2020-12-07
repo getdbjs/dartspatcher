@@ -1,6 +1,6 @@
 name: dartspatcher
-description: A simple http dispatcher for Dart server.
-version: 0.3.0
+description: A simple dispatcher for HTTP server like expressjs to serve REST api and static files.
+version: 0.4.0
 homepage: https://github.com/getdbjs/dartspatcher
 repository: https://github.com/getdbjs/dartspatcher
 issue_tracker: https://github.com/getdbjs/dartspatcher/issues
@@ -14,4 +14,4 @@ dependencies:
   http_server: ^0.9.8+3
 
 dev_dependencies:
-  test: ^0.12.0
+  test: ^1.15.7

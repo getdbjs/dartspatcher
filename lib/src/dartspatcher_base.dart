@@ -6,12 +6,19 @@ import 'listener.dart';
 
 class Dartspatcher {
   static final Dartspatcher _dartspatcher = Dartspatcher._internal();
-  Map<String, List<Listener>> listeners = {'GET': [], 'DELETE': [], 'PATCH': [], 'POST': [], 'PUT': []};
+  Map<String, List<Listener>> listeners = {
+    'GET': [],
+    'DELETE': [],
+    'PATCH': [],
+    'POST': [],
+    'PUT': []
+  };
   HttpServer server;
   HttpRequest request;
   dynamic body;
   Map<String, String> headers = {};
   Map<dynamic, dynamic> locals = {};
+  VirtualDirectory virtualDirectory;
 
   factory Dartspatcher() {
     return _dartspatcher;
@@ -19,20 +26,34 @@ class Dartspatcher {
 
   Dartspatcher._internal();
 
+  void setVirtualDirectory(String path, [Map<String, bool> options]) {
+    virtualDirectory = VirtualDirectory(path);
+    virtualDirectory.allowDirectoryListing =
+        options['allowDirectoryListing'] ?? false;
+    virtualDirectory.followLinks = options['followLinks'] ?? true;
+    virtualDirectory.jailRoot = options['jailRoot'] ?? true;
+  }
+
   void _setHeaders(HttpResponse response) {
     headers.forEach((key, value) {
       response.headers.add(key, value);
     });
   }
 
-  void _setListeners(String method, String path, Function callback, [Map<dynamic, dynamic> locals]) {
+  void _setListeners(String method, String path, Function callback,
+      [Map<dynamic, dynamic> locals]) {
     String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9]+'), '[a-zA-Z0-9]+');
-    listeners[method].add(Listener(path, callback, RegExp(r'' + regExp + ''), locals));
+    listeners[method]
+        .add(Listener(path, callback, RegExp(r'' + regExp + ''), locals));
   }
 
   Map<String, dynamic> _parseRoute() {
     String path = request.uri.path;
-    Map<String, dynamic> params = {'uri': {}, 'query': request.uri.queryParameters, 'body': null};
+    Map<String, dynamic> params = {
+      'uri': {},
+      'query': request.uri.queryParameters,
+      'body': null
+    };
     Map<String, dynamic> result = {'listener': null, 'params': params};
     for (final Listener listener in listeners[request.method]) {
       if (listener.path == path) {
@@ -48,7 +69,8 @@ class Dartspatcher {
           List<String> matchUriList = listener.path.split('/')..removeAt(0);
           for (int x = 0; x < requestUriList.length; x++) {
             if (matchUriList[x].startsWith(':')) {
-              result['params']['uri'][matchUriList[x].replaceAll(':', '')] = requestUriList[x];
+              result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
+                  requestUriList[x];
             }
           }
           result['listener'] = listener;
@@ -111,7 +133,9 @@ class Dartspatcher {
   void _on() {
     try {
       _setHeaders(request.response);
-      if (!request.response.headers['access-control-allow-methods'].toString().contains(request.method)) {
+      if (!request.response.headers['access-control-allow-methods']
+          .toString()
+          .contains(request.method)) {
         _methodNotAllowed();
         return;
       }
@@ -119,9 +143,14 @@ class Dartspatcher {
       result['params']['body'] = body;
       if (result['listener'] is Listener) {
         _ok();
-        result['listener'].callback(request, result['params'], result['listener'].locals);
+        result['listener']
+            .callback(request, result['params'], result['listener'].locals);
       } else {
-        _notFound();
+        if (virtualDirectory != null) {
+          virtualDirectory.serveRequest(request);
+        } else {
+          _notFound();
+        }
       }
     } catch (e, s) {
       print('Exception in handleRequest: $e');
@@ -130,7 +159,8 @@ class Dartspatcher {
     }
   }
 
-  void listen(InternetAddress internetAddress, int port, [Function callback]) async {
+  void listen(InternetAddress internetAddress, int port,
+      [Function callback]) async {
     server = await HttpServer.bind(internetAddress, port);
     callback(server);
     server.transform(HttpBodyHandler()).listen((HttpRequestBody body) {

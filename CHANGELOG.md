@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Adding support to virtual directory for serving static file content
+
 ## 0.3.0
 
 - Dartspatcher instance is a singleton

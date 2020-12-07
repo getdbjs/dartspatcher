@@ -12,12 +12,22 @@ Future main() async {
     'Charset': 'utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    'Access-Control-Allow-Headers':
+        'Origin, X-Requested-With, Content-Type, Accept',
     'Content-Type': 'text/plain; charset=utf-8'
   });
 
   /// Setting a Map of global variables valid for the whole life of the dartspatcher application
   dartspatcher.locals['var'] = 'value';
+
+  /// Setting a virtual directory for serving static file content with options.
+  /// - allowDirectoryListing: Setting a Map of global variables valid for the whole life of the dartspatcher application
+  /// - followLinks: Whether to allow reading resources via a link.
+  /// - jailRoot: Whether to prevent access outside of [root] via relative paths or links.
+  dartspatcher.setVirtualDirectory('web');
+  dartspatcher.virtualDirectory.allowDirectoryListing = false;
+  dartspatcher.virtualDirectory.followLinks = true;
+  dartspatcher.virtualDirectory.jailRoot = true;
 
   /// Setting of listeners for specific path.
   ///
@@ -35,16 +45,21 @@ Future main() async {
   ///
   /// The third param is a Map<dynamic, dynamic> to set the locals variables valid for that request.
   ///
-  dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params,
+      [Map<dynamic, dynamic> locals]) {
     request.response.close();
-  /// Setting a Map of specific variables valid for this request
+
+    /// Setting a Map of specific variables valid for this request
   }, {'var': 'value'});
 
-  dartspatcher.get('/path/:param?var=value', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.get('/path/:param?var=value',
+      (HttpRequest request, Map<String, dynamic> params,
+          [Map<dynamic, dynamic> locals]) {
     request.response.close();
   });
 
-  dartspatcher.post('/path', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.post('/path', (HttpRequest request, Map<String, dynamic> params,
+      [Map<dynamic, dynamic> locals]) {
     request.response.close();
   });
 
