@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Bug fix in virtual directory feature
+
 ## 0.4.0
 
 - Adding support to virtual directory for serving static file content

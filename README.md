@@ -58,6 +58,17 @@ Future main() async {
 }
 ```
 
+#### Set Virtual Directory
+```
+...
+
+dartspatcher.setVirtualDirectory('web');
+dartspatcher.virtualDirectory.allowDirectoryListing = false;
+dartspatcher.virtualDirectory.followLinks = true;
+dartspatcher.virtualDirectory.jailRoot = true;
+
+...
+
 #### Set Headers
 ```
 ...

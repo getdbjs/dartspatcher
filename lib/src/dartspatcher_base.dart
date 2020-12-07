@@ -26,12 +26,8 @@ class Dartspatcher {
 
   Dartspatcher._internal();
 
-  void setVirtualDirectory(String path, [Map<String, bool> options]) {
+  void setVirtualDirectory(String path) {
     virtualDirectory = VirtualDirectory(path);
-    virtualDirectory.allowDirectoryListing =
-        options['allowDirectoryListing'] ?? false;
-    virtualDirectory.followLinks = options['followLinks'] ?? true;
-    virtualDirectory.jailRoot = options['jailRoot'] ?? true;
   }
 
   void _setHeaders(HttpResponse response) {
