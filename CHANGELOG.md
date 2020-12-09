@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+- Adding support for middlewares
+- Adding support for new HTTP methods
+
 ## 0.4.1
 
 - Bug fix in virtual directory feature

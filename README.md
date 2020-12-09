@@ -8,6 +8,8 @@ The following content types are recognized:
 - application/x-www-form-urlencoded
 - multipart/form-data
 
+dartspatcher supports the following methods: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+
 View documentation in example file
 
 **NOTE:** This package works for server-side Dart applications.
@@ -37,6 +39,15 @@ Future main() async {
 
   dartspatcher.setVirtualDirectory('web');
 
+  dartspatcher.setMiddleware([
+    (HttpRequest request, Map<String, dynamic> params,
+        [Map<dynamic, dynamic> locals]) {
+      print('middlware 1');
+    }
+  ], {
+    'local': 'variable'
+  });
+
   dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
     ...
     request.response.close();
@@ -51,6 +62,13 @@ Future main() async {
     ...
     request.response.close();
   });
+
+  dartspatcher.setMiddleware([
+    (HttpRequest request, Map<String, dynamic> params,
+        [Map<dynamic, dynamic> locals]) {
+      print('middlware 2');
+    }
+  ]);
 
   dartspatcher.listen(InternetAddress.loopbackIPv4, 4040, (HttpServer server) {
     print('Listening on localhost:${server.port}');
@@ -68,6 +86,7 @@ dartspatcher.virtualDirectory.followLinks = true;
 dartspatcher.virtualDirectory.jailRoot = true;
 
 ...
+```
 
 #### Set Headers
 ```

@@ -2,20 +2,12 @@ import 'dart:io';
 
 import 'package:http_server/http_server.dart';
 
-import 'listener.dart';
+import 'middleware.dart';
 
 class Dartspatcher {
   static final Dartspatcher _dartspatcher = Dartspatcher._internal();
-  Map<String, List<Listener>> listeners = {
-    'GET': [],
-    'DELETE': [],
-    'PATCH': [],
-    'POST': [],
-    'PUT': []
-  };
+  List<Middleware> _middlewares = [];
   HttpServer server;
-  HttpRequest request;
-  dynamic body;
   Map<String, String> headers = {};
   Map<dynamic, dynamic> locals = {};
   VirtualDirectory virtualDirectory;
@@ -30,20 +22,24 @@ class Dartspatcher {
     virtualDirectory = VirtualDirectory(path);
   }
 
+  void setMiddleware(List<Function> callbacks, [Map<dynamic, dynamic> locals]) {
+    _middlewares.add(Middleware(callbacks, locals));
+  }
+
   void _setHeaders(HttpResponse response) {
-    headers.forEach((key, value) {
+    headers.forEach((String key, String value) {
       response.headers.add(key, value);
     });
   }
 
-  void _setListeners(String method, String path, Function callback,
+  void _setListeners(String method, String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9]+'), '[a-zA-Z0-9]+');
-    listeners[method]
-        .add(Listener(path, callback, RegExp(r'' + regExp + ''), locals));
+    _middlewares.add(Middleware.listener(
+        callbacks, locals, method, path, RegExp(r'' + regExp + '')));
   }
 
-  Map<String, dynamic> _parseRoute() {
+  Map<String, dynamic> _parseRoute(HttpRequest request) {
     String path = request.uri.path;
     Map<String, dynamic> params = {
       'uri': {},
@@ -51,43 +47,51 @@ class Dartspatcher {
       'body': null
     };
     Map<String, dynamic> result = {'listener': null, 'params': params};
-    for (final Listener listener in listeners[request.method]) {
-      if (listener.path == path) {
-        result['listener'] = listener;
+    for (final Middleware middleware in _middlewares) {
+      if (request.method == middleware.method && middleware.path == path) {
+        result['listener'] = middleware;
         break;
       }
     }
-    if (result['listener'] is! Listener) {
-      for (final Listener listener in listeners[request.method]) {
-        var match = listener.regExp.stringMatch(path);
-        if (match == path) {
-          List<String> requestUriList = path.split('/')..removeAt(0);
-          List<String> matchUriList = listener.path.split('/')..removeAt(0);
-          for (int x = 0; x < requestUriList.length; x++) {
-            if (matchUriList[x].startsWith(':')) {
-              result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
-                  requestUriList[x];
+    if (result['listener'] is! Middleware) {
+      for (final Middleware middleware in _middlewares) {
+        if (request.method == middleware.method) {
+          var match = middleware.regExp.stringMatch(path);
+          if (match == path) {
+            List<String> requestUriList = path.split('/')..removeAt(0);
+            List<String> matchUriList = middleware.path.split('/')..removeAt(0);
+            for (int x = 0; x < requestUriList.length; x++) {
+              if (matchUriList[x].startsWith(':')) {
+                result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
+                    requestUriList[x];
+              }
             }
+            result['listener'] = middleware;
+            break;
           }
-          result['listener'] = listener;
-          break;
         }
       }
     }
     return result;
   }
 
-  void _ok() {
+  void close(HttpRequest request, int statusCode) {
+    request.response
+      ..statusCode = statusCode
+      ..close();
+  }
+
+  void _ok(HttpRequest request) {
     request.response.statusCode = HttpStatus.ok;
   }
 
-  void _notFound() {
+  void _notFound(HttpRequest request) {
     request.response
       ..statusCode = HttpStatus.notFound
       ..close();
   }
 
-  void _internalServerError(e, s) {
+  void _internalServerError(HttpRequest request, e, s) {
     request.response
       ..statusCode = HttpStatus.internalServerError
       ..write("Exception in handleRequest: $e.")
@@ -95,7 +99,7 @@ class Dartspatcher {
       ..close();
   }
 
-  void _methodNotAllowed() {
+  void _methodNotAllowed(HttpRequest request) {
     request.response
       ..statusCode = HttpStatus.methodNotAllowed
       ..write("Unsupported request: ${request.method}.")
@@ -106,52 +110,87 @@ class Dartspatcher {
     this.headers = headers;
   }
 
-  void get(String path, Function callback, [Map<dynamic, dynamic> locals]) {
-    _setListeners('GET', path, callback, locals);
+  void get(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('GET', path, callbacks, locals);
   }
 
-  void delete(String path, Function callback, [Map<dynamic, dynamic> locals]) {
-    _setListeners('DELETE', path, callback);
+  void head(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('HEAD', path, callbacks, locals);
   }
 
-  void patch(String path, Function callback, [Map<dynamic, dynamic> locals]) {
-    _setListeners('PATCH', path, callback);
+  void post(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('POST', path, callbacks);
   }
 
-  void post(String path, Function callback, [Map<dynamic, dynamic> locals]) {
-    _setListeners('POST', path, callback);
+  void put(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('PUT', path, callbacks);
   }
 
-  void put(String path, Function callback, [Map<dynamic, dynamic> locals]) {
-    _setListeners('PUT', path, callback);
+  void delete(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('DELETE', path, callbacks);
   }
 
-  void _on() {
+  void connect(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('CONNECT', path, callbacks, locals);
+  }
+
+  void options(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('OPTIONS', path, callbacks, locals);
+  }
+
+  void trace(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('TRACE', path, callbacks);
+  }
+
+  void patch(String path, List<Function> callbacks,
+      [Map<dynamic, dynamic> locals]) {
+    _setListeners('PATCH', path, callbacks);
+  }
+
+  void _on(HttpRequest request, dynamic body) {
     try {
       _setHeaders(request.response);
       if (!request.response.headers['access-control-allow-methods']
           .toString()
           .contains(request.method)) {
-        _methodNotAllowed();
+        _methodNotAllowed(request);
         return;
       }
-      Map<String, dynamic> result = _parseRoute();
+      Map<String, dynamic> result = _parseRoute(request);
       result['params']['body'] = body;
-      if (result['listener'] is Listener) {
-        _ok();
-        result['listener']
-            .callback(request, result['params'], result['listener'].locals);
+      if (result['listener'] != null) {
+        _ok(request);
+
+        List<Middleware> middlewaresChain = [];
+        _middlewares.forEach((Middleware middleware) {
+          if (middleware.method == null || middleware == result['listener']) {
+            middlewaresChain.add(middleware);
+          }
+        });
+        middlewaresChain.forEach((Middleware middleware) {
+          middleware.callbacks.forEach((Function callback) {
+            callback(request, result['params'], middleware.locals);
+          });
+        });
       } else {
         if (virtualDirectory != null) {
           virtualDirectory.serveRequest(request);
         } else {
-          _notFound();
+          _notFound(request);
         }
       }
     } catch (e, s) {
       print('Exception in handleRequest: $e');
       print('StackTrace in handleRequest: $s');
-      _internalServerError(e, s);
+      _internalServerError(request, e, s);
     }
   }
 
@@ -160,9 +199,7 @@ class Dartspatcher {
     server = await HttpServer.bind(internetAddress, port);
     callback(server);
     server.transform(HttpBodyHandler()).listen((HttpRequestBody body) {
-      this.body = body.body;
-      request = body.request;
-      _on();
+      _on(body.request, body.body);
     });
   }
 }
