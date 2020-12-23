@@ -1,11 +1,10 @@
 name: dartspatcher
-description: A simple dispatcher for HTTP server like expressjs to serve REST api and static files.
-version: 0.5.0
+description: A simple router dispatcher for HTTP server like expressjs to serve REST api and static files.
+version: 0.5.3
 homepage: https://github.com/getdbjs/dartspatcher
 repository: https://github.com/getdbjs/dartspatcher
 issue_tracker: https://github.com/getdbjs/dartspatcher/issues
 documentation: https://github.com/getdbjs/dartspatcher
-author: Davide Bausach <davide.bausach@gmail.com>
 
 environment:
   sdk: '>=2.10.0 <3.0.0'

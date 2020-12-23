@@ -7,6 +7,7 @@ import 'middleware.dart';
 class Dartspatcher {
   static final Dartspatcher _dartspatcher = Dartspatcher._internal();
   List<Middleware> _middlewares = [];
+  Function errorHandler;
   HttpServer server;
   Map<String, String> headers = {};
   Map<dynamic, dynamic> locals = {};
@@ -26,7 +27,15 @@ class Dartspatcher {
     _middlewares.add(Middleware(callbacks, locals));
   }
 
-  void _setHeaders(HttpResponse response) {
+  void setErrorHandler(Function callback) {
+    errorHandler = callback;
+  }
+
+  void setHeaders(Map<String, String> headers) {
+    this.headers = headers;
+  }
+
+  void _setResponseHeaders(HttpResponse response) {
     headers.forEach((String key, String value) {
       response.headers.add(key, value);
     });
@@ -75,9 +84,10 @@ class Dartspatcher {
     return result;
   }
 
-  void close(HttpRequest request, int statusCode) {
+  void close(HttpRequest request, int statusCode, [dynamic body = '']) {
     request.response
       ..statusCode = statusCode
+      ..write(body)
       ..close();
   }
 
@@ -104,10 +114,6 @@ class Dartspatcher {
       ..statusCode = HttpStatus.methodNotAllowed
       ..write("Unsupported request: ${request.method}.")
       ..close();
-  }
-
-  void setHeaders(Map<String, String> headers) {
-    this.headers = headers;
   }
 
   void get(String path, List<Function> callbacks,
@@ -157,7 +163,7 @@ class Dartspatcher {
 
   void _on(HttpRequest request, dynamic body) {
     try {
-      _setHeaders(request.response);
+      _setResponseHeaders(request.response);
       if (!request.response.headers['access-control-allow-methods']
           .toString()
           .contains(request.method)) {
@@ -188,9 +194,13 @@ class Dartspatcher {
         }
       }
     } catch (e, s) {
-      print('Exception in handleRequest: $e');
-      print('StackTrace in handleRequest: $s');
-      _internalServerError(request, e, s);
+      if (errorHandler != null) {
+        errorHandler(request, e, s);
+      } else {
+        print('Exception in handleRequest: $e');
+        print('StackTrace in handleRequest: $s');
+        _internalServerError(request, e, s);
+      }
     }
   }
 

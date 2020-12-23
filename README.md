@@ -70,6 +70,11 @@ Future main() async {
     }
   ]);
 
+  dartspatcher.setErrorHandler((HttpRequest request, dynamic e, StackTrace s) {
+    print('Error Handler');
+    dartspatcher.close(request, HttpStatus.internalServerError);
+  });
+
   dartspatcher.listen(InternetAddress.loopbackIPv4, 4040, (HttpServer server) {
     print('Listening on localhost:${server.port}');
   });
@@ -102,6 +107,31 @@ dartspatcher.setHeaders({
 
 ...
 ```
+
+#### Set Middlewares
+```
+dartspatcher.setMiddleware([
+  (HttpRequest request, Map<String, dynamic> params,
+      [Map<dynamic, dynamic> locals]) {
+    print('middlware 1');
+  },
+  (HttpRequest request, Map<String, dynamic> params,
+      [Map<dynamic, dynamic> locals]) {
+    print('middlware 2');
+  }
+], {
+  'local': 'variable'
+});
+```
+
+#### Set Error Handler
+```
+dartspatcher.setErrorHandler((HttpRequest request, dynamic e, StackTrace s) {
+  print('Error Handler');
+  dartspatcher.close(request, HttpStatus.internalServerError);
+});
+```
+
 #### Params Map<String, dynamic>
 ```
 {
@@ -110,6 +140,7 @@ dartspatcher.setHeaders({
   "body": {}
 }
 ```
+
 ## Features and bugs
 
 Please file feature requests and bugs at the [issue tracker][tracker].

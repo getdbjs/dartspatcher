@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Adding support for generic Error Handler
+
 ## 0.5.0
 
 - Adding support for middlewares

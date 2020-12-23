@@ -80,6 +80,11 @@ Future main() async {
     }
   ]);
 
+  dartspatcher.setErrorHandler((HttpRequest request, dynamic e, StackTrace s) {
+    print('Error Handler');
+    dartspatcher.close(request, HttpStatus.internalServerError);
+  });
+
   dartspatcher.listen(InternetAddress.loopbackIPv4, 4040, (HttpServer server) {
     print('Listening on localhost:${server.port}');
   });
