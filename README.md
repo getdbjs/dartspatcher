@@ -48,20 +48,20 @@ Future main() async {
     'local': 'variable'
   });
 
-  dartspatcher.get('/', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.get('/', [(HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
     ...
     request.response.close();
-  }, {'var': 'value'});
+  }], {'var': 'value'});
 
-  dartspatcher.get('/path/:param?var=value', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.get('/path/:param?var=value', [(HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
     ...
     request.response.close();
-  });
+  }]);
 
-  dartspatcher.post('/path', (HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
+  dartspatcher.post('/path', [(HttpRequest request, Map<String, dynamic> params, [Map<dynamic, dynamic> locals]) {
     ...
     request.response.close();
-  });
+  }]);
 
   dartspatcher.setMiddleware([
     (HttpRequest request, Map<String, dynamic> params,

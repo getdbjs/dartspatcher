@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- Accept dot "." character in listeners path
+
 ## 0.5.3
 
 - Adding support for generic Error Handler

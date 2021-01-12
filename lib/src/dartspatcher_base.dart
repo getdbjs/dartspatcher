@@ -43,7 +43,7 @@ class Dartspatcher {
 
   void _setListeners(String method, String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
-    String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9]+'), '[a-zA-Z0-9]+');
+    String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
     _middlewares.add(Middleware.listener(
         callbacks, locals, method, path, RegExp(r'' + regExp + '')));
   }

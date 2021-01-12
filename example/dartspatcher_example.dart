@@ -66,6 +66,7 @@ Future main() async {
     'var': 'value'
   });
 
+  /// Listener path with params and query string
   dartspatcher.get('/path/:param?var=value', [
     (HttpRequest request, Map<String, dynamic> params,
         [Map<dynamic, dynamic> locals]) {
@@ -73,6 +74,7 @@ Future main() async {
     }
   ]);
 
+  /// Listener simple path
   dartspatcher.post('/path', [
     (HttpRequest request, Map<String, dynamic> params,
         [Map<dynamic, dynamic> locals]) {
@@ -80,11 +82,13 @@ Future main() async {
     }
   ]);
 
+  /// Error Handler Middleware
   dartspatcher.setErrorHandler((HttpRequest request, dynamic e, StackTrace s) {
     print('Error Handler');
     dartspatcher.close(request, HttpStatus.internalServerError);
   });
 
+  /// Dartspatcher Server Listener
   dartspatcher.listen(InternetAddress.loopbackIPv4, 4040, (HttpServer server) {
     print('Listening on localhost:${server.port}');
   });
