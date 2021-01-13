@@ -17,37 +17,46 @@ class Dartspatcher {
     return _dartspatcher;
   }
 
+  /// Private constructor to provide a singleton
   Dartspatcher._internal();
 
+  /// Set Virtual Directory path
   void setVirtualDirectory(String path) {
     virtualDirectory = VirtualDirectory(path);
   }
 
+  /// Set server middlewares
   void setMiddleware(List<Function> callbacks, [Map<dynamic, dynamic> locals]) {
     _middlewares.add(Middleware(callbacks, locals));
   }
 
+  /// Set error handler callback
   void setErrorHandler(Function callback) {
     errorHandler = callback;
   }
 
+  /// Set global server response headers
   void setHeaders(Map<String, String> headers) {
     this.headers = headers;
   }
 
+  /// Private method to set headers on specific request
   void _setResponseHeaders(HttpResponse response) {
     headers.forEach((String key, String value) {
       response.headers.add(key, value);
     });
   }
 
+  /// Set listeners for server request paths
   void _setListeners(String method, String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
-    String regExp = path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
+    String regExp =
+        path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
     _middlewares.add(Middleware.listener(
         callbacks, locals, method, path, RegExp(r'' + regExp + '')));
   }
 
+  /// Match route requested with setted listeners
   Map<String, dynamic> _parseRoute(HttpRequest request) {
     String path = request.uri.path;
     Map<String, dynamic> params = {
@@ -84,6 +93,7 @@ class Dartspatcher {
     return result;
   }
 
+  /// Close http request
   void close(HttpRequest request, int statusCode, [dynamic body = '']) {
     request.response
       ..statusCode = statusCode
@@ -91,16 +101,19 @@ class Dartspatcher {
       ..close();
   }
 
+  /// Set status code 200
   void _ok(HttpRequest request) {
     request.response.statusCode = HttpStatus.ok;
   }
 
+  /// Set status code 404
   void _notFound(HttpRequest request) {
     request.response
       ..statusCode = HttpStatus.notFound
       ..close();
   }
 
+  /// Set status code 500
   void _internalServerError(HttpRequest request, e, s) {
     request.response
       ..statusCode = HttpStatus.internalServerError
@@ -109,6 +122,7 @@ class Dartspatcher {
       ..close();
   }
 
+  /// Set status code 405
   void _methodNotAllowed(HttpRequest request) {
     request.response
       ..statusCode = HttpStatus.methodNotAllowed
@@ -116,51 +130,61 @@ class Dartspatcher {
       ..close();
   }
 
+  /// Set listeners for GET request
   void get(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('GET', path, callbacks, locals);
   }
 
+  /// Set listeners for HEAD request
   void head(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('HEAD', path, callbacks, locals);
   }
 
+  /// Set listeners for POST request
   void post(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('POST', path, callbacks);
   }
 
+  /// Set listeners for PUT request
   void put(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('PUT', path, callbacks);
   }
 
+  /// Set listeners for DELETE request
   void delete(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('DELETE', path, callbacks);
   }
 
+  /// Set listeners for CONNECT request
   void connect(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('CONNECT', path, callbacks, locals);
   }
 
+  /// Set listeners for OPTIONS request
   void options(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('OPTIONS', path, callbacks, locals);
   }
 
+  /// Set listeners for TRACE request
   void trace(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('TRACE', path, callbacks);
   }
 
+  /// Set listeners for PATCH request
   void patch(String path, List<Function> callbacks,
       [Map<dynamic, dynamic> locals]) {
     _setListeners('PATCH', path, callbacks);
   }
 
+  /// Listener for a request
   void _on(HttpRequest request, dynamic body) {
     try {
       _setResponseHeaders(request.response);
@@ -174,18 +198,32 @@ class Dartspatcher {
       result['params']['body'] = body;
       if (result['listener'] != null) {
         _ok(request);
-
-        List<Middleware> middlewaresChain = [];
+        List<Function> middlewaresFunctionsChain = [];
+        List<Map<dynamic, dynamic>> middlewaresLocalsChain = [];
         _middlewares.forEach((Middleware middleware) {
           if (middleware.method == null || middleware == result['listener']) {
-            middlewaresChain.add(middleware);
+            for (int i = 0; i < middleware.callbacks.length; i++) {
+              middlewaresLocalsChain.add(middleware.locals);
+            }
+            middlewaresFunctionsChain.addAll(middleware.callbacks);
           }
         });
-        middlewaresChain.forEach((Middleware middleware) {
-          middleware.callbacks.forEach((Function callback) {
-            callback(request, result['params'], middleware.locals);
-          });
-        });
+        Iterator<Function> functionsIterator =
+            middlewaresFunctionsChain.iterator;
+        Iterator<Map<dynamic, dynamic>> localsIterator =
+            middlewaresLocalsChain.iterator;
+        void next() {
+          if (functionsIterator.moveNext()) {
+            localsIterator.moveNext();
+            functionsIterator.current(
+                request, result['params'], next, localsIterator.current);
+          }
+        }
+
+        functionsIterator.moveNext();
+        localsIterator.moveNext();
+        functionsIterator.current(
+            request, result['params'], next, localsIterator.current);
       } else {
         if (virtualDirectory != null) {
           virtualDirectory.serveRequest(request);
@@ -204,6 +242,7 @@ class Dartspatcher {
     }
   }
 
+  /// Server listen start
   void listen(InternetAddress internetAddress, int port,
       [Function callback]) async {
     server = await HttpServer.bind(internetAddress, port);

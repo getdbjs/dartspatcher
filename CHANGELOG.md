@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- Adding support for next funcion inside middlewares to move forward in the chain of middlewares
+
 ## 0.5.4
 
 - Accept dot "." character in listeners path

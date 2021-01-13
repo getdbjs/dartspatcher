@@ -30,10 +30,12 @@ Future main() async {
   dartspatcher.virtualDirectory.jailRoot = true;
 
   /// It is possible to set middlewares before or after the path listeners
+  /// The next function is colled to move forward in the chain of middlewares
   dartspatcher.setMiddleware([
-    (HttpRequest request, Map<String, dynamic> params,
+    (HttpRequest request, Map<String, dynamic> params, Function next,
         [Map<dynamic, dynamic> locals]) {
       print('middlware');
+      next();
     }
   ], {
     'local': 'variable'
@@ -56,7 +58,7 @@ Future main() async {
   /// The third param is a Map<dynamic, dynamic> to set the locals variables valid for that request.
   ///
   dartspatcher.get('/', [
-    (HttpRequest request, Map<String, dynamic> params,
+    (HttpRequest request, Map<String, dynamic> params, Function next,
         [Map<dynamic, dynamic> locals]) {
       request.response.close();
 
@@ -68,7 +70,7 @@ Future main() async {
 
   /// Listener path with params and query string
   dartspatcher.get('/path/:param?var=value', [
-    (HttpRequest request, Map<String, dynamic> params,
+    (HttpRequest request, Map<String, dynamic> params, Function next,
         [Map<dynamic, dynamic> locals]) {
       request.response.close();
     }
@@ -76,7 +78,7 @@ Future main() async {
 
   /// Listener simple path
   dartspatcher.post('/path', [
-    (HttpRequest request, Map<String, dynamic> params,
+    (HttpRequest request, Map<String, dynamic> params, Function next,
         [Map<dynamic, dynamic> locals]) {
       request.response.close();
     }
