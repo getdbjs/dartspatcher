@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- Adding support for OPTIONS request method from browser
+
 ## 0.6.0
 
 - Adding support for next funcion inside middlewares to move forward in the chain of middlewares

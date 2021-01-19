@@ -194,6 +194,13 @@ class Dartspatcher {
         _methodNotAllowed(request);
         return;
       }
+      if (request.method == 'OPTIONS') {
+        print(request.method);
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..close();
+        return;
+      }
       Map<String, dynamic> result = _parseRoute(request);
       result['params']['body'] = body;
       if (result['listener'] != null) {

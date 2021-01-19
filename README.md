@@ -41,7 +41,7 @@ Future main() async {
   dartspatcher.setVirtualDirectory('web');
 
   dartspatcher.setMiddleware([
-    (HttpRequest request, Map<String, dynamic> params,
+    (HttpRequest request, Map<String, dynamic> params, Function next,
         [Map<dynamic, dynamic> locals]) {
       print('middlware 1');
     }
