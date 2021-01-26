@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+- Bug fix
+
 ## 0.6.1
 
 - Adding support for OPTIONS request method from browser

@@ -195,7 +195,6 @@ class Dartspatcher {
         return;
       }
       if (request.method == 'OPTIONS') {
-        print(request.method);
         request.response
           ..statusCode = HttpStatus.ok
           ..close();
