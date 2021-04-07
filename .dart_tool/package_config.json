@@ -99,9 +99,9 @@
     },
     {
       "name": "http_server",
-      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/http_server-0.9.8+3",
+      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/http_server-1.0.0",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.12"
     },
     {
       "name": "intl",
@@ -141,9 +141,9 @@
     },
     {
       "name": "mime",
-      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/mime-0.9.7",
+      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/mime-1.0.0",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.12"
     },
     {
       "name": "node_interop",
@@ -171,9 +171,9 @@
     },
     {
       "name": "path",
-      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/path-1.7.0",
+      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/path-1.8.0",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.12"
     },
     {
       "name": "pedantic",
@@ -207,9 +207,9 @@
     },
     {
       "name": "shelf_static",
-      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/shelf_static-0.2.8",
+      "rootUri": "file:///Users/davidebausach/.pub-cache/hosted/pub.dartlang.org/shelf_static-0.2.9+2",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.3"
     },
     {
       "name": "shelf_web_socket",
@@ -317,10 +317,10 @@
       "name": "dartspatcher",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "2.10"
+      "languageVersion": "2.12"
     }
   ],
-  "generated": "2021-04-07T12:54:19.129575Z",
+  "generated": "2021-04-07T14:24:35.294029Z",
   "generator": "pub",
-  "generatorVersion": "2.10.4"
+  "generatorVersion": "2.12.2"
 }

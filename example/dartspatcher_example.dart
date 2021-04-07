@@ -25,15 +25,15 @@ Future main() async {
   /// - followLinks: Whether to allow reading resources via a link.
   /// - jailRoot: Whether to prevent access outside of [root] via relative paths or links.
   dartspatcher.setVirtualDirectory('web');
-  dartspatcher.virtualDirectory.allowDirectoryListing = false;
-  dartspatcher.virtualDirectory.followLinks = true;
-  dartspatcher.virtualDirectory.jailRoot = true;
+  dartspatcher.virtualDirectory!.allowDirectoryListing = false;
+  dartspatcher.virtualDirectory!.followLinks = true;
+  dartspatcher.virtualDirectory!.jailRoot = true;
 
   /// It is possible to set middlewares before or after the path listeners
   /// The next function is colled to move forward in the chain of middlewares
   dartspatcher.setMiddleware([
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       print('middlware');
       next();
     }
@@ -59,7 +59,7 @@ Future main() async {
   ///
   dartspatcher.get('/', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       request.response.close();
 
       /// Setting a Map of specific variables valid for this request
@@ -71,7 +71,7 @@ Future main() async {
   /// Listener path with params and query string
   dartspatcher.get('/path/:param?var=value', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       request.response.close();
     }
   ]);
@@ -79,7 +79,7 @@ Future main() async {
   /// Listener simple path
   dartspatcher.post('/path', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       request.response.close();
     }
   ]);

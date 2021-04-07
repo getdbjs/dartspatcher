@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+- Fix for example and Readme
+
 ## 0.7.1
 
 - Bug fix in null safety

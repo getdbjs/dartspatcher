@@ -42,7 +42,7 @@ Future main() async {
 
   dartspatcher.setMiddleware([
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       print('middlware 1');
     }
   ], {
@@ -51,7 +51,7 @@ Future main() async {
 
   dartspatcher.get('/', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       // ...
       request.response.close();
     }
@@ -61,7 +61,7 @@ Future main() async {
 
   dartspatcher.get('/path/:param?var=value', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       // ...
       request.response.close();
     }
@@ -69,7 +69,7 @@ Future main() async {
 
   dartspatcher.post('/path', [
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       // ...
       request.response.close();
     }
@@ -77,7 +77,7 @@ Future main() async {
 
   dartspatcher.setMiddleware([
     (HttpRequest request, Map<String, dynamic> params, Function next,
-        [Map<dynamic, dynamic> locals]) {
+        [Map<dynamic, dynamic>? locals]) {
       print('middlware 2');
     }
   ]);
@@ -98,9 +98,9 @@ Future main() async {
 ...
 
 dartspatcher.setVirtualDirectory('web');
-dartspatcher.virtualDirectory.allowDirectoryListing = false;
-dartspatcher.virtualDirectory.followLinks = true;
-dartspatcher.virtualDirectory.jailRoot = true;
+dartspatcher.virtualDirectory!.allowDirectoryListing = false;
+dartspatcher.virtualDirectory!.followLinks = true;
+dartspatcher.virtualDirectory!.jailRoot = true;
 
 ...
 ```
@@ -124,11 +124,11 @@ dartspatcher.setHeaders({
 ```
 dartspatcher.setMiddleware([
   (HttpRequest request, Map<String, dynamic> params,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     print('middlware 1');
   },
   (HttpRequest request, Map<String, dynamic> params,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     print('middlware 2');
   }
 ], {

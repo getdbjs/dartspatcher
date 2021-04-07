@@ -11,7 +11,7 @@ class Dartspatcher {
   HttpServer? server;
   Map<String, String> headers = {};
   Map<dynamic, dynamic> locals = {};
-  late VirtualDirectory virtualDirectory;
+  VirtualDirectory? virtualDirectory;
 
   factory Dartspatcher() {
     return _dartspatcher;
@@ -51,7 +51,7 @@ class Dartspatcher {
   void _setListeners(String method, String path, List<Function> callbacks,
       [Map<dynamic, dynamic>? locals]) {
     String regExp =
-        path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
+    path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
     _middlewares.add(Middleware.listener(
         callbacks, locals, method, path, RegExp(r'' + regExp + '')));
   }
@@ -81,7 +81,7 @@ class Dartspatcher {
             for (int x = 0; x < requestUriList.length; x++) {
               if (matchUriList[x].startsWith(':')) {
                 result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
-                    requestUriList[x];
+                requestUriList[x];
               }
             }
             result['listener'] = middleware;
@@ -205,20 +205,6 @@ class Dartspatcher {
       if (result['listener'] != null) {
         _ok(request);
 
-        /*
-        List<Middleware> middlewaresChain = [];
-        _middlewares.forEach((Middleware middleware) {
-          if (middleware.method == null || middleware == result['listener']) {
-            middlewaresChain.add(middleware);
-          }
-        });
-        middlewaresChain.forEach((Middleware middleware) {
-          middleware.callbacks.forEach((Function callback) {
-            callback(request, result['params'], middleware.locals);
-          });
-        });
-        */
-
         List<Function> middlewaresFunctionsChain = [];
         List<Map<dynamic, dynamic>?> middlewaresLocalsChain = [];
         _middlewares.forEach((Middleware middleware) {
@@ -232,7 +218,7 @@ class Dartspatcher {
         Iterator<Function> functionsIterator =
             middlewaresFunctionsChain.iterator;
         Iterator<Map?> localsIterator =
-          middlewaresLocalsChain.iterator;
+            middlewaresLocalsChain.iterator;
         void next() {
           if (functionsIterator.moveNext()) {
             localsIterator.moveNext();
@@ -247,7 +233,7 @@ class Dartspatcher {
             request, result['params'], next, localsIterator.current);
       } else {
         if (virtualDirectory != null) {
-          virtualDirectory.serveRequest(request);
+          virtualDirectory!.serveRequest(request);
         } else {
           _notFound(request);
         }
