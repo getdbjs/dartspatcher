@@ -26,7 +26,8 @@ class Dartspatcher {
   }
 
   /// Set server middlewares
-  void setMiddleware(List<Function> callbacks, [Map<dynamic, dynamic>? locals]) {
+  void setMiddleware(List<Function> callbacks,
+      [Map<dynamic, dynamic>? locals]) {
     _middlewares.add(Middleware(callbacks, locals));
   }
 
@@ -51,7 +52,7 @@ class Dartspatcher {
   void _setListeners(String method, String path, List<Function> callbacks,
       [Map<dynamic, dynamic>? locals]) {
     String regExp =
-    path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
+        path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
     _middlewares.add(Middleware.listener(
         callbacks, locals, method, path, RegExp(r'' + regExp + '')));
   }
@@ -77,11 +78,12 @@ class Dartspatcher {
           var match = middleware.regExp!.stringMatch(path);
           if (match == path) {
             List<String> requestUriList = path.split('/')..removeAt(0);
-            List<String> matchUriList = middleware.path!.split('/')..removeAt(0);
+            List<String> matchUriList = middleware.path!.split('/')
+              ..removeAt(0);
             for (int x = 0; x < requestUriList.length; x++) {
               if (matchUriList[x].startsWith(':')) {
                 result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
-                requestUriList[x];
+                    requestUriList[x];
               }
             }
             result['listener'] = middleware;
@@ -217,8 +219,7 @@ class Dartspatcher {
         });
         Iterator<Function> functionsIterator =
             middlewaresFunctionsChain.iterator;
-        Iterator<Map?> localsIterator =
-            middlewaresLocalsChain.iterator;
+        Iterator<Map?> localsIterator = middlewaresLocalsChain.iterator;
         void next() {
           if (functionsIterator.moveNext()) {
             localsIterator.moveNext();

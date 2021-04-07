@@ -6,6 +6,7 @@ class Middleware {
   RegExp? regExp;
 
   Middleware(this.callbacks, this.locals);
+
   Middleware.listener(
       this.callbacks, this.locals, this.method, this.path, this.regExp);
 }
