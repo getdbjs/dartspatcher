@@ -7,11 +7,11 @@ import 'middleware.dart';
 class Dartspatcher {
   static final Dartspatcher _dartspatcher = Dartspatcher._internal();
   List<Middleware> _middlewares = [];
-  Function errorHandler;
-  HttpServer server;
+  Function? errorHandler;
+  HttpServer? server;
   Map<String, String> headers = {};
   Map<dynamic, dynamic> locals = {};
-  VirtualDirectory virtualDirectory;
+  late VirtualDirectory virtualDirectory;
 
   factory Dartspatcher() {
     return _dartspatcher;
@@ -26,7 +26,7 @@ class Dartspatcher {
   }
 
   /// Set server middlewares
-  void setMiddleware(List<Function> callbacks, [Map<dynamic, dynamic> locals]) {
+  void setMiddleware(List<Function> callbacks, [Map<dynamic, dynamic>? locals]) {
     _middlewares.add(Middleware(callbacks, locals));
   }
 
@@ -49,7 +49,7 @@ class Dartspatcher {
 
   /// Set listeners for server request paths
   void _setListeners(String method, String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     String regExp =
         path.replaceAll(RegExp(r':[a-zA-Z0-9\.+]+'), '[a-zA-Z0-9\.+]+');
     _middlewares.add(Middleware.listener(
@@ -74,10 +74,10 @@ class Dartspatcher {
     if (result['listener'] is! Middleware) {
       for (final Middleware middleware in _middlewares) {
         if (request.method == middleware.method) {
-          var match = middleware.regExp.stringMatch(path);
+          var match = middleware.regExp!.stringMatch(path);
           if (match == path) {
             List<String> requestUriList = path.split('/')..removeAt(0);
-            List<String> matchUriList = middleware.path.split('/')..removeAt(0);
+            List<String> matchUriList = middleware.path!.split('/')..removeAt(0);
             for (int x = 0; x < requestUriList.length; x++) {
               if (matchUriList[x].startsWith(':')) {
                 result['params']['uri'][matchUriList[x].replaceAll(':', '')] =
@@ -132,55 +132,55 @@ class Dartspatcher {
 
   /// Set listeners for GET request
   void get(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('GET', path, callbacks, locals);
   }
 
   /// Set listeners for HEAD request
   void head(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('HEAD', path, callbacks, locals);
   }
 
   /// Set listeners for POST request
   void post(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('POST', path, callbacks);
   }
 
   /// Set listeners for PUT request
   void put(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('PUT', path, callbacks);
   }
 
   /// Set listeners for DELETE request
   void delete(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('DELETE', path, callbacks);
   }
 
   /// Set listeners for CONNECT request
   void connect(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('CONNECT', path, callbacks, locals);
   }
 
   /// Set listeners for OPTIONS request
   void options(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('OPTIONS', path, callbacks, locals);
   }
 
   /// Set listeners for TRACE request
   void trace(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('TRACE', path, callbacks);
   }
 
   /// Set listeners for PATCH request
   void patch(String path, List<Function> callbacks,
-      [Map<dynamic, dynamic> locals]) {
+      [Map<dynamic, dynamic>? locals]) {
     _setListeners('PATCH', path, callbacks);
   }
 
@@ -204,8 +204,23 @@ class Dartspatcher {
       result['params']['body'] = body;
       if (result['listener'] != null) {
         _ok(request);
+
+        /*
+        List<Middleware> middlewaresChain = [];
+        _middlewares.forEach((Middleware middleware) {
+          if (middleware.method == null || middleware == result['listener']) {
+            middlewaresChain.add(middleware);
+          }
+        });
+        middlewaresChain.forEach((Middleware middleware) {
+          middleware.callbacks.forEach((Function callback) {
+            callback(request, result['params'], middleware.locals);
+          });
+        });
+        */
+
         List<Function> middlewaresFunctionsChain = [];
-        List<Map<dynamic, dynamic>> middlewaresLocalsChain = [];
+        List<Map<dynamic, dynamic>?> middlewaresLocalsChain = [];
         _middlewares.forEach((Middleware middleware) {
           if (middleware.method == null || middleware == result['listener']) {
             for (int i = 0; i < middleware.callbacks.length; i++) {
@@ -216,8 +231,8 @@ class Dartspatcher {
         });
         Iterator<Function> functionsIterator =
             middlewaresFunctionsChain.iterator;
-        Iterator<Map<dynamic, dynamic>> localsIterator =
-            middlewaresLocalsChain.iterator;
+        Iterator<Map?> localsIterator =
+          middlewaresLocalsChain.iterator;
         void next() {
           if (functionsIterator.moveNext()) {
             localsIterator.moveNext();
@@ -239,7 +254,7 @@ class Dartspatcher {
       }
     } catch (e, s) {
       if (errorHandler != null) {
-        errorHandler(request, e, s);
+        errorHandler!(request, e, s);
       } else {
         print('Exception in handleRequest: $e');
         print('StackTrace in handleRequest: $s');
@@ -250,10 +265,12 @@ class Dartspatcher {
 
   /// Server listen start
   void listen(InternetAddress internetAddress, int port,
-      [Function callback]) async {
+      [Function? callback]) async {
     server = await HttpServer.bind(internetAddress, port);
-    callback(server);
-    server.transform(HttpBodyHandler()).listen((HttpRequestBody body) {
+    if (callback != null) {
+      callback(server);
+    }
+    server!.transform(HttpBodyHandler()).listen((HttpRequestBody body) {
       _on(body.request, body.body);
     });
   }
