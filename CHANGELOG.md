@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- Migration to null safety
+
 ## 0.6.2
 
 - Bug fix
