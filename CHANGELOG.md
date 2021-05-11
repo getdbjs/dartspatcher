@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4
+
+- Route parse accept new characters
+
 ## 0.7.3
 
 - Code formatting fix
